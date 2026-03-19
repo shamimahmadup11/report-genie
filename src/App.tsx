@@ -11,12 +11,13 @@ import PatientsPage from "@/pages/PatientsPage";
 import ReportsPage from "@/pages/ReportsPage";
 import GenerateReportPage from "@/pages/GenerateReportPage";
 import ReportViewPage from "@/pages/ReportViewPage";
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoutes = () => {
-  const isAuthenticated = useAppStore((s) => s.isAuthenticated);
+  const { isAuthenticated, currentUser } = useAppStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
@@ -27,6 +28,9 @@ const ProtectedRoutes = () => {
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/generate" element={<GenerateReportPage />} />
         <Route path="/report/:id" element={<ReportViewPage />} />
+        {currentUser?.role === "superadmin" && (
+          <Route path="/admin-management" element={<SuperAdminDashboard />} />
+        )}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>

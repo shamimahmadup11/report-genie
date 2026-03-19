@@ -12,7 +12,7 @@ export interface TestResult {
   testId: string;
   testName: string;
   category: string;
-  value: number;
+  value: number | string;
   unit: string;
   normalRange: string;
   flag: "Normal" | "High" | "Low";
@@ -26,7 +26,27 @@ export interface Report {
   results: TestResult[];
   status: "Final" | "Draft";
   createdAt: string;
+  createdBy?: string;
 }
+
+export type UserRole = "superadmin" | "admin";
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export const PRESET_USERS: AppUser[] = [
+  { id: "u1", name: "Super Admin", email: "super@precisionlabs.in", password: "super123", role: "superadmin", isActive: true, createdAt: "2025-01-01" },
+  { id: "u2", name: "Dr. Meena Gupta", email: "meena@precisionlabs.in", password: "admin123", role: "admin", isActive: true, createdAt: "2025-02-10" },
+  { id: "u3", name: "Rahul Verma", email: "rahul@precisionlabs.in", password: "admin123", role: "admin", isActive: true, createdAt: "2025-03-01" },
+  { id: "u4", name: "Sita Rao", email: "sita@precisionlabs.in", password: "admin123", role: "admin", isActive: false, createdAt: "2025-03-05" },
+];
 
 export const SAMPLE_PATIENTS: Patient[] = [
   { id: "p1", name: "Rajesh Kumar", age: 45, gender: "Male", phone: "+91 98765 43210", address: "12 MG Road, Mumbai", createdAt: "2025-03-15" },
@@ -44,8 +64,9 @@ export const SAMPLE_REPORTS: Report[] = [
     patientName: "Rajesh Kumar",
     status: "Final",
     createdAt: "2025-03-15T10:30:00",
+    createdBy: "u2",
     results: [
-      { testId: "cbc-hgb", testName: "Hemoglobin", category: "Complete Blood Count", value: 11.2, unit: "g/dL", normalRange: "12 - 17", flag: "Low" },
+      { testId: "cbc-hgb", testName: "Hemoglobin (Hb)", category: "Complete Blood Count", value: 11.2, unit: "g/dL", normalRange: "12 - 17", flag: "Low" },
       { testId: "cbc-wbc", testName: "WBC Count", category: "Complete Blood Count", value: 7500, unit: "cells/μL", normalRange: "4000 - 11000", flag: "Normal" },
       { testId: "cbc-plt", testName: "Platelet Count", category: "Complete Blood Count", value: 250, unit: "×10³/μL", normalRange: "150 - 400", flag: "Normal" },
       { testId: "bs-fasting", testName: "Blood Sugar (Fasting)", category: "Blood Sugar", value: 126, unit: "mg/dL", normalRange: "70 - 100", flag: "High" },
@@ -62,9 +83,10 @@ export const SAMPLE_REPORTS: Report[] = [
     patientName: "Priya Sharma",
     status: "Final",
     createdAt: "2025-03-14T14:00:00",
+    createdBy: "u2",
     results: [
-      { testId: "thy-t3", testName: "T3", category: "Thyroid Profile", value: 190, unit: "ng/dL", normalRange: "80 - 200", flag: "Normal" },
-      { testId: "thy-t4", testName: "T4", category: "Thyroid Profile", value: 13.5, unit: "μg/dL", normalRange: "5.1 - 14.1", flag: "Normal" },
+      { testId: "thy-t3", testName: "T3 (Triiodothyronine)", category: "Thyroid Profile", value: 190, unit: "ng/dL", normalRange: "80 - 200", flag: "Normal" },
+      { testId: "thy-t4", testName: "T4 (Thyroxine)", category: "Thyroid Profile", value: 13.5, unit: "μg/dL", normalRange: "5.1 - 14.1", flag: "Normal" },
       { testId: "thy-tsh", testName: "TSH", category: "Thyroid Profile", value: 6.2, unit: "μIU/mL", normalRange: "0.4 - 4", flag: "High" },
     ],
   },
@@ -75,12 +97,13 @@ export const SAMPLE_REPORTS: Report[] = [
     patientName: "Amit Patel",
     status: "Final",
     createdAt: "2025-03-13T09:15:00",
+    createdBy: "u3",
     results: [
-      { testId: "kft-urea", testName: "Urea", category: "Kidney Function Test", value: 25, unit: "mg/dL", normalRange: "7 - 20", flag: "High" },
-      { testId: "kft-creatinine", testName: "Creatinine", category: "Kidney Function Test", value: 1.8, unit: "mg/dL", normalRange: "0.6 - 1.2", flag: "High" },
+      { testId: "kft-urea", testName: "Blood Urea", category: "Kidney Function Test", value: 25, unit: "mg/dL", normalRange: "7 - 20", flag: "High" },
+      { testId: "kft-creatinine", testName: "Serum Creatinine", category: "Kidney Function Test", value: 1.8, unit: "mg/dL", normalRange: "0.6 - 1.2", flag: "High" },
       { testId: "kft-uric-acid", testName: "Uric Acid", category: "Kidney Function Test", value: 6.5, unit: "mg/dL", normalRange: "3.5 - 7.2", flag: "Normal" },
-      { testId: "kft-sodium", testName: "Sodium", category: "Kidney Function Test", value: 140, unit: "mEq/L", normalRange: "136 - 145", flag: "Normal" },
-      { testId: "kft-potassium", testName: "Potassium", category: "Kidney Function Test", value: 5.3, unit: "mEq/L", normalRange: "3.5 - 5", flag: "High" },
+      { testId: "kft-sodium", testName: "Sodium (Na)", category: "Kidney Function Test", value: 140, unit: "mEq/L", normalRange: "136 - 145", flag: "Normal" },
+      { testId: "kft-potassium", testName: "Potassium (K)", category: "Kidney Function Test", value: 5.3, unit: "mEq/L", normalRange: "3.5 - 5", flag: "High" },
     ],
   },
 ];

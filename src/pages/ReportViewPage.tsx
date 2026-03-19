@@ -25,11 +25,8 @@ const ReportViewPage = () => {
     );
   }
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
-  // Group results by category
   const grouped = report.results.reduce<Record<string, typeof report.results>>((acc, r) => {
     if (!acc[r.category]) acc[r.category] = [];
     acc[r.category].push(r);
@@ -52,9 +49,7 @@ const ReportViewPage = () => {
         <div className="flex justify-between border-b-2 border-primary pb-5 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-primary">PRECISION LABS</h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              ISO 9001:2015 Certified Diagnostic Center
-            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">ISO 9001:2015 Certified Diagnostic Center</p>
             <p className="text-[11px] text-muted-foreground">NABL Accredited Laboratory</p>
           </div>
           <div className="text-right text-[11px] text-muted-foreground">
@@ -95,7 +90,7 @@ const ReportViewPage = () => {
           </div>
         </div>
 
-        {/* Results */}
+        {/* Results with smart highlighting */}
         {Object.entries(grouped).map(([category, tests]) => (
           <div key={category} className="mb-6">
             <h3 className="text-xs font-bold uppercase tracking-widest text-primary border-b border-primary/30 pb-1 mb-0">
@@ -108,24 +103,34 @@ const ReportViewPage = () => {
                   <th className="py-2 text-center font-semibold text-xs">Result</th>
                   <th className="py-2 text-left font-semibold text-xs">Units</th>
                   <th className="py-2 text-left font-semibold text-xs">Reference Range</th>
+                  <th className="py-2 text-center font-semibold text-xs">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {tests.map((test, i) => (
-                  <tr key={i} className="border-b border-border/50">
-                    <td className="py-2.5 font-medium">{test.testName}</td>
-                    <td className={`py-2.5 text-center font-mono font-bold ${
-                      test.flag === "High" ? "flag-high" : test.flag === "Low" ? "flag-low" : ""
-                    }`}>
-                      {test.value}
-                      {test.flag !== "Normal" && (
-                        <span className="text-[10px] ml-1">({test.flag.charAt(0)})</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 text-muted-foreground">{test.unit}</td>
-                    <td className="py-2.5 text-muted-foreground font-mono text-xs">{test.normalRange}</td>
-                  </tr>
-                ))}
+                {tests.map((test, i) => {
+                  const isAbnormal = test.flag !== "Normal";
+                  return (
+                    <tr key={i} className="border-b border-border/50">
+                      <td className={`py-2.5 ${isAbnormal ? "font-bold" : "font-medium"}`}>{test.testName}</td>
+                      <td className={`py-2.5 text-center font-mono ${
+                        isAbnormal ? "font-bold text-destructive" : ""
+                      }`}>
+                        {test.value}
+                      </td>
+                      <td className="py-2.5 text-muted-foreground">{test.unit}</td>
+                      <td className="py-2.5 text-muted-foreground font-mono text-xs">{test.normalRange}</td>
+                      <td className="py-2.5 text-center">
+                        {test.flag === "Normal" ? (
+                          <span className="text-xs text-flag-normal font-medium">✅ Normal</span>
+                        ) : (
+                          <span className="text-xs font-bold text-destructive">
+                            🔴 {test.flag === "High" ? "HIGH" : "LOW"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -152,7 +157,7 @@ const ReportViewPage = () => {
         </div>
 
         <p className="text-[9px] text-muted-foreground text-center mt-8">
-          This is a computer-generated report. Values marked (H) are above normal range and (L) are below normal range.
+          This is a computer-generated report. Values marked 🔴 HIGH/LOW are outside the normal reference range.
           Please consult your physician for interpretation.
         </p>
       </div>

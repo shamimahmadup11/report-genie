@@ -10,8 +10,11 @@ import { TEST_MASTER, TEST_CATEGORIES } from "@/data/testMaster";
 import type { TestResult } from "@/data/mockData";
 import { CheckSquare, Square } from "lucide-react";
 
+// Text-based urine tests that take string values
+const TEXT_TESTS = new Set(["ur-color", "ur-appearance", "ur-ketones", "ur-microscopy"]);
+
 const GenerateReportPage = () => {
-  const { patients, addReport } = useAppStore();
+  const { patients, addReport, currentUser } = useAppStore();
   const navigate = useNavigate();
   const [patientId, setPatientId] = useState("");
   const [selectedTests, setSelectedTests] = useState<string[]>([]);
@@ -46,22 +49,34 @@ const GenerateReportPage = () => {
 
     const results: TestResult[] = selectedTests.map((testId) => {
       const def = TEST_MASTER.find((t) => t.id === testId)!;
-      const val = Number(values[testId] || 0);
+      const isText = TEXT_TESTS.has(testId);
+      const rawVal = values[testId] || "";
+      const numVal = Number(rawVal) || 0;
+
       let flag: TestResult["flag"] = "Normal";
-      if (val > def.maxRange) flag = "High";
-      else if (val < def.minRange) flag = "Low";
+      if (!isText && def.minRange !== 0 && def.maxRange !== 0) {
+        if (numVal > def.maxRange) flag = "High";
+        else if (numVal < def.minRange) flag = "Low";
+      }
+
       return {
         testId,
         testName: def.name,
         category: def.category,
-        value: val,
+        value: isText ? rawVal : numVal,
         unit: def.unit,
-        normalRange: `${def.minRange} - ${def.maxRange}`,
-        flag,
+        normalRange: isText ? "—" : `${def.minRange} - ${def.maxRange}`,
+        flag: isText ? ("Normal" as const) : flag,
       };
     });
 
-    addReport({ patientId, patientName: patient.name, results, status: "Final" });
+    addReport({
+      patientId,
+      patientName: patient.name,
+      results,
+      status: "Final",
+      createdBy: currentUser?.id,
+    });
     navigate("/reports");
   };
 
@@ -96,7 +111,7 @@ const GenerateReportPage = () => {
         </Select>
       </div>
 
-      {/* Select All Master Button */}
+      {/* Select All Master */}
       <div className="flex items-center justify-between mb-4 bg-card border border-border rounded-md px-4 py-3">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Test Selection</h2>
@@ -104,12 +119,7 @@ const GenerateReportPage = () => {
             ({selectedTests.length} of {allTestIds.length} selected)
           </span>
         </div>
-        <Button
-          variant={allSelected ? "outline" : "default"}
-          size="sm"
-          onClick={selectAll}
-          className="gap-2"
-        >
+        <Button variant={allSelected ? "outline" : "default"} size="sm" onClick={selectAll} className="gap-2">
           {allSelected ? <Square className="h-4 w-4" /> : <CheckSquare className="h-4 w-4" />}
           {allSelected ? "Deselect All" : "Select All Tests"}
         </Button>
@@ -124,17 +134,11 @@ const GenerateReportPage = () => {
 
           return (
             <div key={category} className="bg-card border border-border rounded-md overflow-hidden">
-              {/* Category Header with Select All button */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
-                <div
-                  className="flex items-center gap-3 cursor-pointer flex-1"
-                  onClick={() => selectCategory(category)}
-                >
-                  <Checkbox
-                    checked={catAllSelected}
-                    className="data-[state=checked]:bg-primary"
-                  />
+                <div className="flex items-center gap-3 cursor-pointer flex-1" onClick={() => selectCategory(category)}>
+                  <Checkbox checked={catAllSelected} className="data-[state=checked]:bg-primary" />
                   <h3 className="text-sm font-semibold">{category}</h3>
+                  <span className="text-[10px] text-muted-foreground">({tests.length} tests)</span>
                   {someSelected && !catAllSelected && (
                     <span className="text-[10px] text-muted-foreground">(partial)</span>
                   )}
@@ -149,10 +153,10 @@ const GenerateReportPage = () => {
                 </Button>
               </div>
 
-              {/* Always show all tests in the category */}
               <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {tests.map((test) => {
                   const isSelected = selectedTests.includes(test.id);
+                  const isText = TEXT_TESTS.has(test.id);
                   return (
                     <div
                       key={test.id}
@@ -167,15 +171,17 @@ const GenerateReportPage = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium">{test.name}</span>
-                        <span className="text-[10px] text-muted-foreground ml-2">
-                          ({test.minRange}–{test.maxRange} {test.unit})
-                        </span>
+                        {!isText && (
+                          <span className="text-[10px] text-muted-foreground ml-2">
+                            ({test.minRange}–{test.maxRange} {test.unit})
+                          </span>
+                        )}
                       </div>
                       {isSelected && (
                         <Input
-                          type="number"
-                          placeholder="Value"
-                          className="w-24 h-8 text-sm font-mono"
+                          type={isText ? "text" : "number"}
+                          placeholder={isText ? "Enter value" : "Value"}
+                          className="w-28 h-8 text-sm font-mono"
                           value={values[test.id] || ""}
                           onChange={(e) => setValues({ ...values, [test.id]: e.target.value })}
                         />
@@ -189,7 +195,7 @@ const GenerateReportPage = () => {
         })}
       </div>
 
-      {/* Bottom Center Action Bar */}
+      {/* Bottom Action Bar */}
       <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-border py-4 -mx-6 px-6 mt-auto">
         <div className="flex flex-col items-center gap-3">
           <p className="text-sm text-muted-foreground">
@@ -198,15 +204,8 @@ const GenerateReportPage = () => {
               : "Select tests above to enter results and generate a report"}
           </p>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => navigate("/reports")}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleGenerate}
-              disabled={!patientId || selectedTests.length === 0}
-              size="lg"
-              className="px-8"
-            >
+            <Button variant="outline" onClick={() => navigate("/reports")}>Cancel</Button>
+            <Button onClick={handleGenerate} disabled={!patientId || selectedTests.length === 0} size="lg" className="px-8">
               Finalize & Generate Report
             </Button>
           </div>

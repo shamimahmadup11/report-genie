@@ -6,16 +6,15 @@ import { Label } from "@/components/ui/label";
 import { FlaskConical } from "lucide-react";
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const login = useAppStore((s) => s.login);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!login(username, password)) {
-      setError("Invalid credentials. Use admin / admin123");
-    }
+    const err = login(email, password);
+    if (err) setError(err);
   };
 
   return (
@@ -26,12 +25,12 @@ const LoginPage = () => {
           <span className="text-xl font-bold tracking-tight">PRECISION LABS</span>
         </div>
         <p className="text-xs text-muted-foreground text-center mb-6">
-          Admin Portal — Enter your credentials
+          Lab Portal — Enter your credentials
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="username" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Username</Label>
-            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1" />
+            <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email</Label>
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" placeholder="you@precisionlabs.in" />
           </div>
           <div>
             <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password</Label>
@@ -40,7 +39,10 @@ const LoginPage = () => {
           {error && <p className="text-xs text-destructive">{error}</p>}
           <Button type="submit" className="w-full">Sign In</Button>
         </form>
-        <p className="text-[11px] text-muted-foreground text-center mt-4">Demo: admin / admin123</p>
+        <div className="mt-4 space-y-1 text-[11px] text-muted-foreground text-center">
+          <p>Super Admin: super@precisionlabs.in / super123</p>
+          <p>Admin: meena@precisionlabs.in / admin123</p>
+        </div>
       </div>
     </div>
   );
